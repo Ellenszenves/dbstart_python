@@ -4,7 +4,7 @@ from sre_constants import SUCCESS
 import tkinter as tk
 from turtle import width
 import pyodbc
-
+server = 'localhost'
 username = ''
 password = ''
 clear = '0'
@@ -14,7 +14,7 @@ def connection():
     global conn
     try:
         conn = pyodbc.connect('Driver={ODBC Driver 17 for SQL Server};'
-        'Server=localhost;'
+        'Server=' +str(server) + ";"
         #'Server=DESKTOP-AQBCCTD;'
         'UID=' +str(username) + ";"
         'PWD=' +str(password) + ";"
@@ -33,20 +33,28 @@ def connecting():
     #ezzel használjuk a változót global scope-ban
     global username
     global password
+    global server
     global username_entry
     global password_entry
+    global server_entry
     username_text = tk.Label(alert, text="Username: ", font=("Arial", 12))
     username_text.grid(column=0, row=0)
     password_text = tk.Label(alert, text="Password: ", font=("Arial", 12))
     password_text.grid(column=0, row=1)
+    server_text = tk.Label(alert, text="Server name: ", font=("Arial", 12))
+    server_text.grid(column=0, row=2)
     username_entry = tk.Entry(alert)
     username_entry.insert(tk.END, username)
     username_entry.grid(column=1, row=0)
-    password_entry = tk.Entry(alert)
+    password_entry = tk.Entry(alert, show="*")
     password_entry.insert(tk.END, password)
     password_entry.grid(column=1, row=1)
+    server_entry = tk.Entry(alert)
+    server_entry.insert(tk.END, server)
+    server_entry.grid(column=1, row=2)
     ok_button = tk.Button(alert, text="OK!", command=check_connect, width=10)
-    ok_button.grid(columnspan=2, row=2)
+    ok_button.grid(columnspan=2, row=3)
+    alert.eval('tk::PlaceWindow . center')
     alert.mainloop()
 
 def check_connect():
@@ -65,14 +73,20 @@ def connect_success():
     success_label.pack()
     success_button = tk.Button(success_screen, text='OK!', command=del_screen)
     success_button.pack()
+    success_screen.eval('tk::PlaceWindow . center')
 
 def connect_failed():
     global connect_fail
     connect_fail = tk.Tk()
     fail_label = tk.Label(connect_fail, text='Login Failed!')
     fail_label.pack()
-    fail_button = tk.Button(connect_fail, text='OK!')
+    fail_button = tk.Button(connect_fail, text='OK!', command=del_fail)
     fail_button.pack()
+    connect_fail.eval('tk::PlaceWindow . center')
+
+def del_fail():
+    global connect_fail
+    connect_fail.destroy()
 
 def del_screen():
     global success_screen
@@ -259,10 +273,5 @@ lista.grid(column=1, row=1, sticky=tk.NE, rowspan=30)
 list_scroll.config(command = lista.yview)
 
 window.eval('tk::PlaceWindow . center')
+connecting()
 window.mainloop()
-
-def login():
-    window = tk.Tk()
-    label_select = tk.Label(text="Üdv!")
-    label_select.grid(column=1, row=0)
-    window.mainloop()
