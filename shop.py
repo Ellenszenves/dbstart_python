@@ -1,34 +1,66 @@
 #!/usr/bin/env python3
 from re import S
+from sre_constants import SUCCESS
 import tkinter as tk
 from turtle import width
 import pyodbc
 
 username = 'teszt'
 password = 'teszt'
+clear = '0'
 conn = pyodbc.connect('Driver={ODBC Driver 17 for SQL Server};'
 'Server=DESKTOP-AQBCCTD;'
-'UID=teszt;'
-'PWD=teszt;'
+'UID='+"'" +str(username) + "';"
+'PWD='+"'" +str(password) + "';"
 'Database=techshop;'
 'Trusted_Connection=yes;'
 )
 #Funkciók
 def connecting():
+    global alert
     alert = tk.Tk()
     alert.geometry('250x150')
+    #ezzel használjuk a változót global scope-ban
+    global username
+    global password
+    global username_entry
+    global password_entry
     username_text = tk.Label(alert, text="Username: ", font=("Arial", 12))
     username_text.grid(column=0, row=0)
     password_text = tk.Label(alert, text="Password: ", font=("Arial", 12))
     password_text.grid(column=0, row=1)
     username_entry = tk.Entry(alert)
+    username_entry.insert(tk.END, username)
     username_entry.grid(column=1, row=0)
     password_entry = tk.Entry(alert)
+    password_entry.insert(tk.END, password)
     password_entry.grid(column=1, row=1)
-    alert.eval('tk::PlaceWindow . center')
-    ok_button = tk.Button(alert, text="OK!", command=alert.destroy, width=10)
+    ok_button = tk.Button(alert, text="OK!", command=check_connect, width=10)
     ok_button.grid(columnspan=2, row=2)
     alert.mainloop()
+
+def check_connect():
+    global username
+    global password
+    global username_entry
+    global password_entry
+    username = username_entry.get()
+    password = password_entry.get()
+    print(username)
+
+def connect_success():
+    global success_screen
+    success_screen = tk.Tk()
+    success_label = tk.Label(success_screen, text='Login Successful!')
+    success_label.pack()
+    success_button = tk.Button(success_screen, text='OK!', command=del_screen)
+    success_button.pack()
+
+def del_screen():
+    global success_screen
+    global alert
+    success_screen.destroy()
+    alert.destroy()
 
 def city():
     query = 'location.city'
@@ -77,28 +109,75 @@ def alert_box(alert_text):
 def select():
     obj_name = lista.get(tk.ANCHOR).split(',')
     if not lista.get(tk.ANCHOR):
-        alert_text="Product not selected!"
+        alert_text="Nothing selected!"
         alert_box(alert_text)
     else:
         print(obj_name[0])
         if label_select['text'] == 'Products':
             cursor = conn.cursor()
-            cursor.execute("Select * from Product.products where name = '" + str(obj_name[0]) + "'")
+            cursor.execute("Select * from Product.products p left join product.categories c on c.id = p.category_id where p.name = '" + str(obj_name[0]) +"'")
             valamike = cursor.fetchall()
             more_info(obj_name, valamike)
+        elif label_select['text'] == 'City':
+            cursor = conn.cursor()
+            cursor.execute("Select * from location.city where name = '" + str(obj_name[0]) +"'")
+            fetch = cursor.fetchall()
+            more_info(obj_name, fetch)
+        elif label_select['text'] == 'States':
+            cursor = conn.cursor()
+            cursor.execute("Select * from location.states where name = '" + str(obj_name[0]) +"'")
+            fetch = cursor.fetchall()
+            more_info(obj_name, fetch)
 
 def more_info(obj_name, input):
-    stock = ''.join(str(e) for e in input)
-    name_text = tk.Label(window, text="Name: ", font=("Arial", 12))
-    name_text.grid(column=3, row=0)
-    stock_text = tk.Label(window, text="Stock: ", font=("Arial", 12))
-    stock_text.grid(column=3, row=1)
-    name_entry = tk.Entry(window)
-    name_entry.insert(tk.END, obj_name[0].replace('(','').replace(')',''))
-    name_entry.grid(column=4, row=0)
-    stock_entry = tk.Entry(window)
-    stock_entry.insert(tk.END, stock.split(',')[4].replace(')',''))
-    stock_entry.grid(column=4, row=1)
+    if label_select['text'] == 'Products':
+        stock = ''.join(str(e) for e in input)
+        global name_entry
+        global stock_entry
+        global category_entry
+        global price_entry
+        name_entry.delete(0, tk.END)
+        name_entry.insert(tk.END, obj_name[0].replace('(','').replace(')',''))
+        stock_entry.delete(0, tk.END)
+        stock_entry.insert(tk.END, stock.split(',')[4].replace(')',''))
+        category_entry.delete(0, tk.END)
+        category_entry.insert(tk.END, stock.split(',')[6].replace(')','').replace("'",''))
+        price_entry.delete(0, tk.END)
+        price_entry.insert(tk.END, stock.split(',')[3].replace(')',''))
+    elif label_select['text'] == 'City':
+        if frame in globals():
+            frame.destroy()
+        elif stateframe in globals():
+            stateframe.destroy()
+        cityframe = tk.Frame()
+        cityframe.grid(column=3, columnspan=3, row=0, rowspan=30, sticky=tk.N)
+        text_label = tk.Label(cityframe, text="City info")
+        text_label.grid(column=3, columnspan=2, row=0)
+        name_text = tk.Label(cityframe, text="Name: ", font=("Arial", 12))
+        name_text.grid(column=3, row=1, sticky=tk.W)
+        stock_text = tk.Label(cityframe, text="ID: ", font=("Arial", 12))
+        stock_text.grid(column=3, row=2, sticky=tk.W)
+        name_entry = tk.Entry(cityframe)
+        name_entry.grid(column=4, row=1)
+        stock_entry = tk.Entry(cityframe)
+        stock_entry.grid(column=4, row=2)
+    elif label_select['text'] == 'States':
+        if cityframe in globals():
+            cityframe.destroy()
+        elif frame in globals():
+            frame.destroy()
+        stateframe = tk.Frame()
+        stateframe.grid(column=3, columnspan=3, row=0, rowspan=30, sticky=tk.N)
+        text_label = tk.Label(stateframe, text="States info")
+        text_label.grid(column=3, columnspan=2, row=0)
+        name_text = tk.Label(stateframe, text="Name: ", font=("Arial", 12))
+        name_text.grid(column=3, row=1, sticky=tk.W)
+        stock_text = tk.Label(stateframe, text="ID: ", font=("Arial", 12))
+        stock_text.grid(column=3, row=2, sticky=tk.W)
+        name_entry = tk.Entry(stateframe)
+        name_entry.grid(column=4, row=1)
+        stock_entry = tk.Entry(stateframe)
+        stock_entry.grid(column=4, row=2)
 
 #Az ablak definiálása
 window = tk.Tk()
@@ -118,24 +197,44 @@ label.grid(column=0, row=0, sticky=tk.NS)
 #Gomb, mérettel és pozícióval
 btn_state = tk.Button(window, text="States", command=state, width=20)
 btn_state.grid(column=0, row=1, sticky=tk.NS)
-
 btn_city = tk.Button(window, text="City", command=city, width=20)
 btn_city.grid(column=0, row=2, sticky=tk.NS)
-#btn_city.place(x=15, y=15, width=100, height=40)
 btn_Prod = tk.Button(window, text="Products", command=prod, width=20)
 btn_Prod.grid(column=0, row=3, sticky=tk.NS)
-
 btn_clear = tk.Button(window, text="Clear", command=clear, width=20)
 btn_clear.grid(column=0, row=4, sticky=tk.NS)
-
 btn_select = tk.Button(window, text="Select", command=select, width=20)
 btn_select.grid(column=0, row=5, sticky=tk.NS)
-
 btn_connect = tk.Button(window, text="Connect", command=connecting, width=20)
 btn_connect.grid(column=0, row=6, sticky=tk.NS)
-
+btn_orders = tk.Button(window, text="Orders", command=connecting, width=20)
+btn_orders.grid(column=0, row=7, sticky=tk.NS)
 list_scroll = tk.Scrollbar(window)
 list_scroll.grid(column=2, row=1, rowspan=30, sticky=tk.N+tk.S)
+
+#Info frame
+frame = tk.Frame(window)
+frame.grid(column=3, columnspan=3, row=0, rowspan=30, sticky=tk.N)
+text_label = tk.Label(frame, text="Product info")
+text_label.grid(column=3, columnspan=2, row=0)
+name_text = tk.Label(frame, text="Name: ", font=("Arial", 12))
+name_text.grid(column=3, row=1, sticky=tk.W)
+stock_text = tk.Label(frame, text="Stock: ", font=("Arial", 12))
+stock_text.grid(column=3, row=2, sticky=tk.W)
+category_text = tk.Label(frame, text="Category: ", font=("Arial", 12))
+category_text.grid(column=3, row=3, sticky=tk.W)
+price_text = tk.Label(frame, text="Price: ", font=("Arial", 12))
+price_text.grid(column=3, row=4, sticky=tk.W)
+name_entry = tk.Entry(frame)
+name_entry.grid(column=4, row=1)
+stock_entry = tk.Entry(frame)
+stock_entry.grid(column=4, row=2)
+category_entry = tk.Entry(frame)
+category_entry.grid(column=4, row=3)
+price_entry = tk.Entry(frame)
+price_entry.grid(column=4, row=4)
+btn_modify = tk.Button(frame, text="Modify data", command=frame.destroy)
+btn_modify.grid(column=3, columnspan=2, row=8)
 
 lista = tk.Listbox(window, width=40, height=30, yscrollcommand = list_scroll.set)
 lista.grid(column=1, row=1, sticky=tk.NE, rowspan=30)
