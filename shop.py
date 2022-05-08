@@ -5,16 +5,26 @@ import tkinter as tk
 from turtle import width
 import pyodbc
 
-username = 'teszt'
-password = 'teszt'
+username = ''
+password = ''
 clear = '0'
-conn = pyodbc.connect('Driver={ODBC Driver 17 for SQL Server};'
-'Server=DESKTOP-AQBCCTD;'
-'UID='+"'" +str(username) + "';"
-'PWD='+"'" +str(password) + "';"
-'Database=techshop;'
-'Trusted_Connection=yes;'
-)
+def connection():
+    global username
+    global password
+    global conn
+    try:
+        conn = pyodbc.connect('Driver={ODBC Driver 17 for SQL Server};'
+        'Server=localhost;'
+        #'Server=DESKTOP-AQBCCTD;'
+        'UID=' +str(username) + ";"
+        'PWD=' +str(password) + ";"
+        'Database=techshop;'
+        'Trusted_Connection=no;')
+        connect_success()
+    except pyodbc.Error as ex:
+        sqlstate = ex.args[0]
+        if sqlstate == '28000':
+            connect_failed()
 #Funkciók
 def connecting():
     global alert
@@ -46,7 +56,7 @@ def check_connect():
     global password_entry
     username = username_entry.get()
     password = password_entry.get()
-    print(username)
+    connection()
 
 def connect_success():
     global success_screen
@@ -55,6 +65,14 @@ def connect_success():
     success_label.pack()
     success_button = tk.Button(success_screen, text='OK!', command=del_screen)
     success_button.pack()
+
+def connect_failed():
+    global connect_fail
+    connect_fail = tk.Tk()
+    fail_label = tk.Label(connect_fail, text='Login Failed!')
+    fail_label.pack()
+    fail_button = tk.Button(connect_fail, text='OK!')
+    fail_button.pack()
 
 def del_screen():
     global success_screen
