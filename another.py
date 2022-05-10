@@ -2,4 +2,5 @@
 import tkinter as tk
 import pyodbc
 
-print("Ez már a másik!")
+def teszt():
+    print("Ez már a másik!")

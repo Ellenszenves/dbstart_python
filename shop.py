@@ -4,11 +4,15 @@ from sre_constants import SUCCESS
 import tkinter as tk
 from turtle import width
 import pyodbc
+#Másik script meghívása
+import another
 server = 'localhost'
 username = ''
 password = ''
 clear = '0'
+#Funkciók
 def connection():
+    global server
     global username
     global password
     global conn
@@ -25,12 +29,11 @@ def connection():
         sqlstate = ex.args[0]
         if sqlstate == '28000':
             connect_failed()
-#Funkciók
+
 def connecting():
     global alert
     alert = tk.Tk()
     alert.geometry('250x150')
-    #ezzel használjuk a változót global scope-ban
     global username
     global password
     global server
@@ -69,7 +72,8 @@ def check_connect():
 def connect_success():
     global success_screen
     success_screen = tk.Tk()
-    success_label = tk.Label(success_screen, text='Login Successful!')
+    success_screen.geometry('250x150')
+    success_label = tk.Label(success_screen, text='Login Successful!', font=("Arial", 12))
     success_label.pack()
     success_button = tk.Button(success_screen, text='OK!', command=del_screen)
     success_button.pack()
@@ -78,7 +82,8 @@ def connect_success():
 def connect_failed():
     global connect_fail
     connect_fail = tk.Tk()
-    fail_label = tk.Label(connect_fail, text='Login Failed!')
+    connect_fail.geometry('250x150')
+    fail_label = tk.Label(connect_fail, text='Login Failed!', font=("Arial", 12))
     fail_label.pack()
     fail_button = tk.Button(connect_fail, text='OK!', command=del_fail)
     fail_button.pack()
@@ -106,6 +111,14 @@ def prod():
     query = 'Product.products'
     sql(query)
 
+def orders():
+    query = 'Orders.orders'
+    cursor = conn.cursor()
+    cursor.execute('Select id from ' + str(query))
+    order_fetch = cursor.fetchall()
+    label_select["text"] = 'Orders'
+    list(order_fetch)
+
 def sql(query):
     cursor = conn.cursor()
     cursor.execute('Select name from ' + str(query))
@@ -120,13 +133,16 @@ def sql(query):
 
 def list(valami):
     lista.delete(0, tk.END)
-    for item in valami:
-        lista.insert(0, item[0].replace(',','').replace("'",'').replace('(','').replace(')',''))
+    if label_select["text"] == 'Orders':
+        for item in valami:
+            lista.insert(0, item[0])
+    else:
+        for item in valami:
+            lista.insert(0, item[0].replace(',','').replace("'",'').replace('(','').replace(')',''))
 
 def clear():
     lista.delete(0, tk.END)
-    #Így kell meghívni egy másik scriptet.
-    import another
+    another.teszt()
 
 def alert_box(alert_text):
     alert = tk.Tk()
@@ -225,7 +241,6 @@ label_select.grid(column=1, row=0)
 
 label = tk.Label(text="DBStart Python")
 label.grid(column=0, row=0, sticky=tk.NS)
-
 #Gomb, mérettel és pozícióval
 btn_state = tk.Button(window, text="States", command=state, width=20)
 btn_state.grid(column=0, row=1, sticky=tk.NS)
@@ -239,7 +254,7 @@ btn_select = tk.Button(window, text="Select", command=select, width=20)
 btn_select.grid(column=0, row=5, sticky=tk.NS)
 btn_connect = tk.Button(window, text="Connect", command=connecting, width=20)
 btn_connect.grid(column=0, row=6, sticky=tk.NS)
-btn_orders = tk.Button(window, text="Orders", command=connecting, width=20)
+btn_orders = tk.Button(window, text="Orders", command=orders, width=20)
 btn_orders.grid(column=0, row=7, sticky=tk.NS)
 list_scroll = tk.Scrollbar(window)
 list_scroll.grid(column=2, row=1, rowspan=30, sticky=tk.N+tk.S)
@@ -267,7 +282,7 @@ price_entry = tk.Entry(frame)
 price_entry.grid(column=4, row=4)
 btn_modify = tk.Button(frame, text="Modify data", command=frame.destroy)
 btn_modify.grid(column=3, columnspan=2, row=8)
-
+#Lista
 lista = tk.Listbox(window, width=40, height=30, yscrollcommand = list_scroll.set)
 lista.grid(column=1, row=1, sticky=tk.NE, rowspan=30)
 list_scroll.config(command = lista.yview)
