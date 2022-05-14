@@ -147,6 +147,7 @@ def clear():
 def alert_box(alert_text):
     alert = tk.Tk()
     alert.geometry('250x150')
+    alert.rowconfigure(1, minsize=50, weight=1)
     alert_text = tk.Label(alert, text=alert_text, font=("Arial", 15))
     alert_text.pack()
     alert.eval('tk::PlaceWindow . center')
@@ -242,6 +243,12 @@ def modify():
             +"' where id = '" + str(prod_id) +"'")
     commit = cursor.commit()
     print(commit)
+    if str(commit) == "None":
+        alert_text = "Modify complete!"
+        alert_box(alert_text)
+    else:
+        alert_text = "Something went wrong!"
+        alert_box(alert_text)
 
 #Az ablak definiálása
 window = tk.Tk()
