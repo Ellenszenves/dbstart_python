@@ -164,8 +164,8 @@ def select():
         if label_select['text'] == 'Products':
             cursor = conn.cursor()
             cursor.execute("Select * from Product.products p left join product.categories c on c.id = p.category_id where p.name = '" + str(obj_name[0]) +"'")
-            valamike = cursor.fetchall()
-            more_info(obj_name, valamike)
+            fetch = cursor.fetchall()
+            more_info(obj_name, fetch)
         elif label_select['text'] == 'City':
             cursor = conn.cursor()
             cursor.execute("Select * from location.city where name = '" + str(obj_name[0]) +"'")
@@ -180,6 +180,9 @@ def select():
 def more_info(obj_name, input):
     if label_select['text'] == 'Products':
         stock = ''.join(str(e) for e in input)
+        global prod_id
+        #ID
+        prod_id = stock.split(',')[0].replace('(','')
         global name_entry
         global stock_entry
         global category_entry
@@ -226,6 +229,19 @@ def more_info(obj_name, input):
         name_entry.grid(column=4, row=1)
         stock_entry = tk.Entry(stateframe)
         stock_entry.grid(column=4, row=2)
+
+def modify():
+    prod_name = name_entry.get()
+    prod_stock = stock_entry.get()
+    prod_category = category_entry.get()
+    prod_price = price_entry.get()
+    print(prod_name, prod_stock, prod_category, prod_price)
+    cursor = conn.cursor()
+    cursor.execute("UPDATE Product.products SET name = '" + str(prod_name) \
+        +"', stock = '" + str(prod_stock) + "', price = '" + str(prod_price) \
+            +"' where id = '" + str(prod_id) +"'")
+    commit = cursor.commit()
+    print(commit)
 
 #Az ablak definiálása
 window = tk.Tk()
@@ -280,7 +296,7 @@ category_entry = tk.Entry(frame)
 category_entry.grid(column=4, row=3)
 price_entry = tk.Entry(frame)
 price_entry.grid(column=4, row=4)
-btn_modify = tk.Button(frame, text="Modify data", command=frame.destroy)
+btn_modify = tk.Button(frame, text="Modify data", command=modify)
 btn_modify.grid(column=3, columnspan=2, row=8)
 #Lista
 lista = tk.Listbox(window, width=40, height=30, yscrollcommand = list_scroll.set)
