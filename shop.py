@@ -203,15 +203,11 @@ def more_info(obj_name, input):
         category_vlist.current(cat_id)
         global name_entry
         global stock_entry
-        global category_entry
         global price_entry
         name_entry.delete(0, tk.END)
         name_entry.insert(tk.END, obj_name[0].replace('(','').replace(')',''))
         stock_entry.delete(0, tk.END)
         stock_entry.insert(tk.END, stock.split(',')[4].replace(')',''))
-        category_entry.delete(0, tk.END)
-        category_entry.insert(tk.END, stock.split(',')[6].replace(')','').replace("'",''))
-        catvar = category_entry.get()
         price_entry.delete(0, tk.END)
         price_entry.insert(tk.END, stock.split(',')[3].replace(')',''))
     elif label_select['text'] == 'City':
@@ -252,13 +248,18 @@ def more_info(obj_name, input):
 def modify():
     prod_name = name_entry.get()
     prod_stock = stock_entry.get()
-    prod_category = category_entry.get()
+    prod_category = category_vlist.get()
+    catcursor = conn.cursor()
+    catcursor.execute("SELECT id FROM Product.categories WHERE name = '" + str(prod_category) + "';")
+    catmodid = catcursor.fetchall()
+    print(str(catmodid).replace(',', '').replace('(', '').replace(')', '').replace('[', '').replace(']',''))
     prod_price = price_entry.get()
     print(prod_name, prod_stock, prod_category, prod_price)
     cursor = conn.cursor()
     cursor.execute("UPDATE Product.products SET name = '" + str(prod_name) \
         +"', stock = '" + str(prod_stock) + "', price = '" + str(prod_price) \
-            +"' where id = '" + str(prod_id) +"'")
+            +"', category_id = '" +str(catmodid).replace(',', '').replace('(', '').replace(')', '').replace('[', '').replace(']','') \
+                +"' where id = '" + str(prod_id) +"'")
     commit = cursor.commit()
     print(commit)
     if str(commit) == "None":
@@ -317,14 +318,12 @@ name_entry = tk.Entry(frame)
 name_entry.grid(column=4, row=1)
 stock_entry = tk.Entry(frame)
 stock_entry.grid(column=4, row=2)
-category_entry = tk.Entry(frame)
-category_entry.grid(column=4, row=3)
 price_entry = tk.Entry(frame)
 price_entry.grid(column=4, row=4)
 catlista = tk.StringVar()
 category_vlist = ttk.Combobox(frame, textvariable=catlista)
 category_vlist.set = ("")
-category_vlist.grid(column=4, row=5)
+category_vlist.grid(column=4, row=3)
 btn_modify = tk.Button(frame, text="Modify data", command=modify)
 btn_modify.grid(column=3, columnspan=2, row=8)
 #Lista
