@@ -2,6 +2,7 @@
 from re import S
 from sre_constants import SUCCESS
 import tkinter as tk
+from tkinter import ttk
 from turtle import width
 import pyodbc
 #Másik script meghívása
@@ -10,6 +11,7 @@ server = 'localhost'
 username = ''
 password = ''
 clear = '0'
+catlist=''
 #Funkciók
 def connection():
     global server
@@ -181,9 +183,24 @@ def select():
 def more_info(obj_name, input):
     if label_select['text'] == 'Products':
         stock = ''.join(str(e) for e in input)
+        global category_vlist
+        global catlist
+        global teszt
+        cursor = conn.cursor()
+        cursor.execute("Select name from Product.categories")
+        catlist = cursor.fetchall()
+        i = 0
+        teszt=''
+        for i in range(len(catlist)):
+            print(catlist[i])
+            teszt = teszt + str(catlist[i]).replace('(','').replace(')','').replace("'",'"').replace(',',' ')
+        category_vlist['values'] = teszt
         global prod_id
         #ID
         prod_id = stock.split(',')[0].replace('(','')
+        cat_id = int(stock.split(',')[2].replace('(','')) - 1
+        print(cat_id)
+        category_vlist.current(cat_id)
         global name_entry
         global stock_entry
         global category_entry
@@ -194,6 +211,7 @@ def more_info(obj_name, input):
         stock_entry.insert(tk.END, stock.split(',')[4].replace(')',''))
         category_entry.delete(0, tk.END)
         category_entry.insert(tk.END, stock.split(',')[6].replace(')','').replace("'",''))
+        catvar = category_entry.get()
         price_entry.delete(0, tk.END)
         price_entry.insert(tk.END, stock.split(',')[3].replace(')',''))
     elif label_select['text'] == 'City':
@@ -303,6 +321,10 @@ category_entry = tk.Entry(frame)
 category_entry.grid(column=4, row=3)
 price_entry = tk.Entry(frame)
 price_entry.grid(column=4, row=4)
+catlista = tk.StringVar()
+category_vlist = ttk.Combobox(frame, textvariable=catlista)
+category_vlist.set = ("")
+category_vlist.grid(column=4, row=5)
 btn_modify = tk.Button(frame, text="Modify data", command=modify)
 btn_modify.grid(column=3, columnspan=2, row=8)
 #Lista
